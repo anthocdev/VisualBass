@@ -1,0 +1,24 @@
+﻿<Window x:Class="Visual.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Visual"
+        xmlns:cs="clr-namespace:Visual.cs"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Button x:Name="btnPlay" Content="Play" HorizontalAlignment="Left" Margin="43,287,0,0" VerticalAlignment="Top" Width="75" Click="btnPlay_Click"/>
+        <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="134,287,0,0" VerticalAlignment="Top" Width="75" Click="btnStop_Click"/>
+        <Button x:Name="btnOpen" Content="Open" HorizontalAlignment="Left" Margin="225,287,0,0" VerticalAlignment="Top" Width="75" Click="btnOpen_Click"/>
+        <ListBox x:Name="lstPlaylist" HorizontalAlignment="Left" Height="186" Margin="43,23,0,0" VerticalAlignment="Top" Width="257"/>
+        <Slider x:Name="sldVolume" HorizontalAlignment="Left" Margin="106,334,0,0" VerticalAlignment="Top" Width="194" Maximum="100" Value="100" Thumb.DragCompleted="sldVolume_DragCompleted"/>
+        <Slider x:Name="sldStream" HorizontalAlignment="Left" Margin="43,254,0,0" VerticalAlignment="Top" Width="257" Maximum="100" Thumb.DragCompleted="sldStream_DragCompleted"  />
+
+        <Label x:Name="lblVolume" Content="Volume" HorizontalAlignment="Left" Margin="43,326,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblStream" Content="00:00:00" HorizontalAlignment="Left" Margin="43,223,0,0" VerticalAlignment="Top" Width="95"/>
+        <Label x:Name="lblVolumeVal" Content="100" HorizontalAlignment="Left" Margin="300,334,0,0" VerticalAlignment="Top" Width="32"/>
+        <TextBox x:Name="txbAudioData" HorizontalAlignment="Left" Height="186" Margin="381,23,0,0" TextWrapping="Wrap" Text="{Binding Source={x:Static cs:BassCore.FFTData}, Mode=OneWay}" VerticalAlignment="Top" Width="310"/>
+
+    </Grid>
+</Window>
