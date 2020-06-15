@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -24,7 +26,7 @@ namespace Visual
     public partial class MainWindow : Window
     {
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
-        
+        private List<MetaModel> MMList = new List<MetaModel>();
         public MainWindow()
         {
             InitializeComponent();
@@ -32,11 +34,19 @@ namespace Visual
             BassCore.InitBass(BassCore.HZ);
             dispatcherTimer.Tick += dispatcherTimer_Tick;
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            BassCore.PlayEvent += (s, file) =>
+            {
+                initDetails();
+            };
         }
+
+
 
         private void dispatcherTimer_Tick(object sender, EventArgs e) {
             lblStream.Content = TimeSpan.FromSeconds(BassCore.GetStreamPos(BassCore.Stream)).ToString();
             sldStream.Value = BassCore.GetStreamPos(BassCore.Stream);
+
+            BassCore.GetChanData(BassCore.Stream);  //Currently testing - Constant collection of FFT data          
 
             //Check if track should be switched (not efficient/ to be improved)
             if (BassCore.NextTrack())
@@ -53,6 +63,8 @@ namespace Visual
                 lstPlaylist.SelectedIndex = DataVars.CurrentTrack = 0; //Setting playlist index and initializing currenttrack value
                 BassCore.PlaylistEnd = false;
             }
+
+
         }
         /// <summary>
         /// Opening file select dialog
@@ -71,15 +83,28 @@ namespace Visual
             if (result == true)
             {
                 string[] temp = dlg.FileNames;
-                for(int i = 0; i < temp.Length; i++)
+                for (int i = 0; i < temp.Length; i++)
                 {
                     DataVars.FileList.Add(temp[i]);
                     MetaModel MM = new MetaModel(temp[i]);
+                    MMList.Add(MM);
                     lstPlaylist.Items.Add(MM.Artist + " | " + MM.Title);
                 }
             }
         }
 
+        private void initDetails()
+        {
+            lstDetails.Items.Clear();
+            MetaModel PlayingItem = MMList[lstPlaylist.SelectedIndex];
+            lstDetails.Items.Add("Title: " + PlayingItem.Title);
+            lstDetails.Items.Add("Artist: " + PlayingItem.Artist);
+            lstDetails.Items.Add("Album: " + PlayingItem.Album);
+            lstDetails.Items.Add("Year: " + PlayingItem.Year);
+            lstDetails.Items.Add("BitRate: " + PlayingItem.BitRate);
+            lstDetails.Items.Add("Channel: " + PlayingItem.Channels);
+            lstDetails.Items.Add("Freq: " + PlayingItem.Freq);
+        }
         /// <summary>
         /// Start playback
         /// </summary>

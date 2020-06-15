@@ -12,7 +12,6 @@ namespace Visual.cs
     /// </summary>
     class MetaModel
     {
-
         public int Freq;
         public int BitRate;
         public string Channels;

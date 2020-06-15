@@ -27,12 +27,17 @@ namespace Visual.cs
         private static bool isPlaying = false;
         public static bool PlaylistEnd;
 
-        private static float[] fftData;
+        private static float[] fftData = new float[2048];
 
         private static readonly List<int> ExtensionHandlers = new List<int>();
 
         public static event PropertyChangedEventHandler StaticPropertyChanged;
 
+        //Just testing
+        public delegate void PlaybackEventHandler(object sender, string file);
+
+        public static event PlaybackEventHandler PlayEvent;
+        public static byte[] SpectrumData = new byte[180];
         private static void OnStaticPropertyChanged(string propertyName)
         {
             StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propertyName));
@@ -44,6 +49,8 @@ namespace Visual.cs
             set { fftData = value; OnStaticPropertyChanged("FFTData"); Console.WriteLine(fftData + "kekw"); }
         }
 
+
+
         /// <summary>
         /// Initialization of bass library
         /// </summary>
@@ -51,7 +58,6 @@ namespace Visual.cs
         /// <returns></returns>
         public static bool InitBass(int hz)
         {
-            fftData = new float[1024];
             if (!InitDefaultDevice)
             {
                 InitDefaultDevice = Bass.BASS_Init(-1, hz, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero);
@@ -83,7 +89,7 @@ namespace Visual.cs
         /// <param name="volume"></param>
         public static void Play(string file, int volume)
         {
-
+            PlayEvent?.Invoke(null, file);
             if (Bass.BASS_ChannelIsActive(Stream) != BASSActive.BASS_ACTIVE_PAUSED) { 
                 Stop(); //Stopping existing stream
                 if (InitBass(HZ))
@@ -94,7 +100,7 @@ namespace Visual.cs
                     {
                     
                         Volume = volume;
-                        Bass.BASS_ChannelSetAttribute(Stream, BASSAttribute.BASS_ATTRIB_VOL, Volume / 100); //Initializing channel volume attribute
+                        Bass.BASS_ChannelSetAttribute(Stream, BASSAttribute.BASS_ATTRIB_VOL, Volume / 100F); //Initializing channel volume attribute
                         Bass.BASS_ChannelPlay(Stream, false); //Start playing the stream
                     }
                 }
@@ -103,8 +109,40 @@ namespace Visual.cs
             {
                 Bass.BASS_ChannelPlay(Stream, false);
             }
-
+            
             isPlaying = true;
+        }
+
+        public static void GetChanData(int stream)
+        {
+            Bass.BASS_ChannelGetData(stream, FFTData, (int)(BASSData.BASS_DATA_FFT1024 | BASSData.BASS_DATA_FFT_COMPLEX));
+            //FFTData.ToList().ForEach(i => Console.Write(i.ToString()));
+
+            //for (int a = 0; a < 1024; a++)
+            //    Console.WriteLine("{0}: ({1}, {2})", a, FFTData[a * 2], FFTData[a * 2 + 1]);
+
+            int x, y;
+            int b0 = 0;
+            for(x=0; x< 180; x++)
+            {
+                double peak = 0;
+                int b1 = (int)Math.Pow(2, x * 10.0 / (180 - 1));
+
+                if (b1 > 1023) b1 = 1023;
+                if (b1 <= b0) b1 = b0 + 1;
+
+                for(; b0 < b1; b0++)
+                {
+                    if (peak < FFTData[1 + b0]) peak = FFTData[1 + b0];
+                }
+
+                y = (int)(Math.Sqrt(peak) * 3 * 255 - 4);
+
+                if (y > 255) y = 255;
+                if (y < 0) y = 0;
+
+                SpectrumData[x] = (byte)y;
+            }          
         }
 
         /// <summary>
@@ -168,7 +206,6 @@ namespace Visual.cs
         {
             Volume = volume;
             Bass.BASS_ChannelSetAttribute(stream, BASSAttribute.BASS_ATTRIB_VOL, Volume / 100F);
-            Bass.BASS_ChannelGetData(Stream, FFTData, (int)BASSData.BASS_DATA_FFT2048);
         }
 
         public static bool NextTrack()
