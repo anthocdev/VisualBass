@@ -13,7 +13,14 @@
         <Button x:Name="btnPlay" Content="Play" HorizontalAlignment="Left" Margin="43,287,0,0" VerticalAlignment="Top" Width="75" Click="btnPlay_Click"/>
         <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="134,287,0,0" VerticalAlignment="Top" Width="75" Click="btnStop_Click"/>
         <Button x:Name="btnOpen" Content="Open" HorizontalAlignment="Left" Margin="225,287,0,0" VerticalAlignment="Top" Width="75" Click="btnOpen_Click"/>
-        <ListBox x:Name="lstPlaylist" HorizontalAlignment="Left" Height="186" Margin="43,23,0,0" VerticalAlignment="Top" Width="257" MouseDoubleClick="btnPlay_Click"/>
+        <ListBox x:Name="lstPlaylist" HorizontalAlignment="Left" Height="186" Margin="43,23,0,0" VerticalAlignment="Top" Width="257" MouseDoubleClick="btnPlay_Click" ItemsSource="{Binding MMList, UpdateSourceTrigger=Default}">
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Remove" Click="MenuItem_Delete_Click"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
+        </ListBox>
+
         <Slider x:Name="sldVolume" HorizontalAlignment="Left" Margin="106,364,0,0" VerticalAlignment="Top" Width="194" Maximum="100" Value="100" Thumb.DragCompleted="sldVolume_DragCompleted"/>
         <Slider x:Name="sldStream" HorizontalAlignment="Left" Margin="43,254,0,0" VerticalAlignment="Top" Width="257" Maximum="100" Thumb.DragCompleted="sldStream_DragCompleted"  />
 

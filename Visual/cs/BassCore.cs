@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Xml.Schema;
 using Un4seen.Bass;
+using Un4seen.Bass.AddOn.Tags;
 using Un4seen.Bass.Misc;
 
 namespace Visual.cs
@@ -98,7 +99,7 @@ namespace Visual.cs
                     Stream = Bass.BASS_StreamCreateFile(file, 0, 0, BASSFlag.BASS_DEFAULT); //Loading in audio file into stream
                     if (Stream != 0)
                     {
-                    
+                        
                         Volume = volume;
                         Bass.BASS_ChannelSetAttribute(Stream, BASSAttribute.BASS_ATTRIB_VOL, Volume / 100F); //Initializing channel volume attribute
                         Bass.BASS_ChannelPlay(Stream, false); //Start playing the stream

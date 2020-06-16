@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using OxyPlot;
 using Visual.cs;
+using Visual.cs.Models;
 
 namespace Visual
 {
@@ -27,12 +28,15 @@ namespace Visual
     public partial class MainWindow : Window
     {
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
-        private List<MetaModel> MMList = new List<MetaModel>(); //List of current tracks
-       
+        private List<MetaModel> MMListCore = new List<MetaModel>(); //List of current tracks
+        public PlaylistModel MMList { get; set; }
+        private MetaModel _playingItem;
+
         public string OxyTitle { get; private set; }
         public ObservableCollection<DataPoint> Points { get; private set; }
         public MainWindow()
         {
+            this.MMList = new PlaylistModel();
             initOxy();
             InitializeComponent();      
             DataVars.Core = this;
@@ -52,6 +56,7 @@ namespace Visual
         {
             this.OxyTitle = "Visualizer v0.0001";
             this.Points = new ObservableCollection<DataPoint>();
+            
         }
 
 
@@ -113,7 +118,7 @@ namespace Visual
                     DataVars.FileList.Add(temp[i]);
                     MetaModel MM = new MetaModel(temp[i]);
                     MMList.Add(MM);
-                    lstPlaylist.Items.Add(MM.Artist + " | " + MM.Title);
+                    //lstPlaylist.Items.Add(MM.Artist + " | " + MM.Title);
                 }
             }
         }
@@ -121,14 +126,14 @@ namespace Visual
         private void initDetails()
         {
             lstDetails.Items.Clear();
-            MetaModel PlayingItem = MMList[lstPlaylist.SelectedIndex];
-            lstDetails.Items.Add("Title: " + PlayingItem.Title);
-            lstDetails.Items.Add("Artist: " + PlayingItem.Artist);
-            lstDetails.Items.Add("Album: " + PlayingItem.Album);
-            lstDetails.Items.Add("Year: " + PlayingItem.Year);
-            lstDetails.Items.Add("BitRate: " + PlayingItem.BitRate);
-            lstDetails.Items.Add("Channel: " + PlayingItem.Channels);
-            lstDetails.Items.Add("Freq: " + PlayingItem.Freq);
+            _playingItem = MMList[lstPlaylist.SelectedIndex];
+            lstDetails.Items.Add("Title: " + _playingItem.Title);
+            lstDetails.Items.Add("Artist: " + _playingItem.Artist);
+            lstDetails.Items.Add("Album: " + _playingItem.Album);
+            lstDetails.Items.Add("Year: " + _playingItem.Year);
+            lstDetails.Items.Add("BitRate: " + _playingItem.BitRate);
+            lstDetails.Items.Add("Channel: " + _playingItem.Channels);
+            lstDetails.Items.Add("Freq: " + _playingItem.Freq);
         }
         /// <summary>
         /// Start playback
@@ -139,11 +144,10 @@ namespace Visual
         {
             if ((lstPlaylist.Items.Count != 0) && (lstPlaylist.SelectedIndex != -1))
             {
-                string current = DataVars.FileList[lstPlaylist.SelectedIndex];
                 DataVars.CurrentTrack = lstPlaylist.SelectedIndex;
                 dispatcherTimer.IsEnabled = true;
                 BassCore.SetStreamVolume(BassCore.Stream, (int)sldVolume.Value);
-                BassCore.Play(current, BassCore.Volume); //Using bass library to play with initial volume val
+                BassCore.Play(MMList[lstPlaylist.SelectedIndex].File, BassCore.Volume); //Using bass library to play with initial volume val
                 lblStream.Content = TimeSpan.FromSeconds(BassCore.GetStreamPos(BassCore.Stream)).ToString();
                 sldStream.Maximum = BassCore.GetStreamTime(BassCore.Stream);
                 sldStream.Value = BassCore.GetStreamPos(BassCore.Stream);
@@ -174,6 +178,13 @@ namespace Visual
             BassCore.Pause();
         }
 
+        private void MenuItem_Delete_Click(object sender, RoutedEventArgs e)
+        {
+            if (lstPlaylist.SelectedIndex == -1) return; //Don't do anything
+
+            if (_playingItem == MMList[lstPlaylist.SelectedIndex]) BassCore.Stop();
+            MMList.RemoveAt(lstPlaylist.SelectedIndex);
+        }
     }
 
 }

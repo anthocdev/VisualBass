@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,10 +11,11 @@ namespace Visual.cs
     /// <summary>
     /// Model for storing track information
     /// </summary>
-    class MetaModel
+    public class MetaModel
     {
         public int Freq;
         public int BitRate;
+        public string File;
         public string Channels;
         public string Artist;
         public string Title;
@@ -33,6 +35,7 @@ namespace Visual.cs
         public MetaModel(string file)
         {
             TAG_INFO metaInfo = new TAG_INFO();
+            File = file;
             metaInfo = BassTags.BASS_TAG_GetFromFile(file);
             BitRate = metaInfo.bitrate;
             Freq = metaInfo.channelinfo.freq;
@@ -45,6 +48,11 @@ namespace Visual.cs
             else
                 Title = metaInfo.title;
             Year = metaInfo.year;
+        }
+
+        public override string ToString()
+        {
+            return this.Title;
         }
     }
 }
