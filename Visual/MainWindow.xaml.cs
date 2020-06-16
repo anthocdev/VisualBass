@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,7 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using Un4seen.Bass;
+using OxyPlot;
 using Visual.cs;
 
 namespace Visual
@@ -26,26 +27,37 @@ namespace Visual
     public partial class MainWindow : Window
     {
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
-        private List<MetaModel> MMList = new List<MetaModel>();
+        private List<MetaModel> MMList = new List<MetaModel>(); //List of current tracks
+       
+        public string OxyTitle { get; private set; }
+        public ObservableCollection<DataPoint> Points { get; private set; }
         public MainWindow()
         {
-            InitializeComponent();
+            initOxy();
+            InitializeComponent();      
             DataVars.Core = this;
+            this.DataContext = this;
             BassCore.InitBass(BassCore.HZ);
             dispatcherTimer.Tick += dispatcherTimer_Tick;
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            CompositionTarget.Rendering += graphTick; // Attach to comptarget renderer for smoother result and no mouse lag
+            /* Execute when song is played (auto & manual)*/
             BassCore.PlayEvent += (s, file) =>
             {
-                initDetails();
+                initDetails(); //Song details of current playing track
             };
         }
 
+        private void initOxy()
+        {
+            this.OxyTitle = "Visualizer v0.0001";
+            this.Points = new ObservableCollection<DataPoint>();
+        }
 
 
         private void dispatcherTimer_Tick(object sender, EventArgs e) {
             lblStream.Content = TimeSpan.FromSeconds(BassCore.GetStreamPos(BassCore.Stream)).ToString();
             sldStream.Value = BassCore.GetStreamPos(BassCore.Stream);
-
             BassCore.GetChanData(BassCore.Stream);  //Currently testing - Constant collection of FFT data          
 
             //Check if track should be switched (not efficient/ to be improved)
@@ -65,6 +77,19 @@ namespace Visual
             }
 
 
+        }
+
+        
+        
+
+        private void graphTick(object sender, EventArgs e)
+        {
+            byte[] chanData = BassCore.GetChanData(BassCore.Stream);
+            Points.Clear();
+            for (int i = 0; i < chanData.Length; i++)
+            {
+                Points.Add(new DataPoint(i, chanData[i]));
+            }
         }
         /// <summary>
         /// Opening file select dialog
@@ -150,4 +175,5 @@ namespace Visual
         }
 
     }
+
 }

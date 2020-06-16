@@ -37,7 +37,7 @@ namespace Visual.cs
         public delegate void PlaybackEventHandler(object sender, string file);
 
         public static event PlaybackEventHandler PlayEvent;
-        public static byte[] SpectrumData = new byte[180];
+        public static byte[] SpectrumData = new byte[200];
         private static void OnStaticPropertyChanged(string propertyName)
         {
             StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propertyName));
@@ -113,7 +113,7 @@ namespace Visual.cs
             isPlaying = true;
         }
 
-        public static void GetChanData(int stream)
+        public static byte[] GetChanData(int stream)
         {
             Bass.BASS_ChannelGetData(stream, FFTData, (int)(BASSData.BASS_DATA_FFT1024 | BASSData.BASS_DATA_FFT_COMPLEX));
             //FFTData.ToList().ForEach(i => Console.Write(i.ToString()));
@@ -123,10 +123,10 @@ namespace Visual.cs
 
             int x, y;
             int b0 = 0;
-            for(x=0; x< 180; x++)
+            for(x=0; x< 200; x++)
             {
                 double peak = 0;
-                int b1 = (int)Math.Pow(2, x * 10.0 / (180 - 1));
+                int b1 = (int)Math.Pow(2, x * 10.0 / (200 - 1));
 
                 if (b1 > 1023) b1 = 1023;
                 if (b1 <= b0) b1 = b0 + 1;
@@ -141,8 +141,9 @@ namespace Visual.cs
                 if (y > 255) y = 255;
                 if (y < 0) y = 0;
 
-                SpectrumData[x] = (byte)y;
-            }          
+                SpectrumData[x] = (byte)y;               
+            }
+            return SpectrumData;
         }
 
         /// <summary>
