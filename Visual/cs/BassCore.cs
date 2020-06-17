@@ -14,50 +14,66 @@ using Un4seen.Bass.Misc;
 
 namespace Visual.cs
 {
-    public static class BassCore
+
+    /// <summary>
+    /// Storing player states, allows easy separation from automatic BASS.Net and manual user behaviour.
+    /// </summary>
+    public enum PlayerState
+    {
+        Disabled,
+        Stopped,
+        Paused,
+        PlaylistEnd,
+        Playing
+
+    }
+    public class BassCore
     {
 
-        public static int HZ = 44100;
+        public int HZ = 44100;
+        public PlayerState activeState; // Current state of the player (stream)
+        private bool InitDefaultDevice;
 
-        private static bool InitDefaultDevice;
+        public int Stream;
 
-        public static int Stream;
+        public int Volume = 100;
 
-        public static int Volume = 100;
+        private bool isPlaying = false;
+        public bool PlaylistEnd;
 
-        private static bool isPlaying = false;
-        public static bool PlaylistEnd;
+        private float[] fftData = new float[2048];
 
-        private static float[] fftData = new float[2048];
+        private readonly List<int> ExtensionHandlers = new List<int>();
 
-        private static readonly List<int> ExtensionHandlers = new List<int>();
-
-        public static event PropertyChangedEventHandler StaticPropertyChanged;
+        public event PropertyChangedEventHandler StaticPropertyChanged;
 
         //Just testing
         public delegate void PlaybackEventHandler(object sender, string file);
 
-        public static event PlaybackEventHandler PlayEvent;
-        public static byte[] SpectrumData = new byte[200];
-        private static void OnStaticPropertyChanged(string propertyName)
+        public event PlaybackEventHandler PlayEvent;
+        public byte[] SpectrumData = new byte[200];
+        private void OnStaticPropertyChanged(string propertyName)
         {
             StaticPropertyChanged?.Invoke(null, new PropertyChangedEventArgs(propertyName));
         }
 
-        public static float[] FFTData
+        public float[] FFTData
         {
             get { return fftData; }
             set { fftData = value; OnStaticPropertyChanged("FFTData"); Console.WriteLine(fftData + "kekw"); }
         }
 
-
+        public BassCore()
+        {
+            activeState = PlayerState.Disabled; 
+        }
 
         /// <summary>
         /// Initialization of bass library
         /// </summary>
         /// <param name="hz"></param>
         /// <returns></returns>
-        public static bool InitBass(int hz)
+        public bool InitBass(int hz)
         {
             if (!InitDefaultDevice)
             {
@@ -75,6 +91,7 @@ namespace Visual.cs
                     if (errs != 0)
                         MessageBox.Show("Total of " + errs + " plugins failed to load", "Error", MessageBoxButton.OK);
                     errs = 0;
+                    activeState = PlayerState.Stopped;
                 }
             }
                 
@@ -88,7 +105,7 @@ namespace Visual.cs
         /// </summary>
         /// <param name="file"></param>
         /// <param name="volume"></param>
-        public static void Play(string file, int volume)
+        public void Play(string file, int volume)
         {
             PlayEvent?.Invoke(null, file);
             if (Bass.BASS_ChannelIsActive(Stream) != BASSActive.BASS_ACTIVE_PAUSED) { 
@@ -110,11 +127,12 @@ namespace Visual.cs
             {
                 Bass.BASS_ChannelPlay(Stream, false);
             }
-            
-            isPlaying = true;
+
+            activeState = PlayerState.Playing;
         }
 
-        public static byte[] GetChanData(int stream)
+        //Chandata (Fast Fourier Transform) refactored to a specific range of values for spectrum display
+        public byte[] GetChanData(int stream)
         {
             Bass.BASS_ChannelGetData(stream, FFTData, (int)(BASSData.BASS_DATA_FFT1024 | BASSData.BASS_DATA_FFT_COMPLEX));
             //FFTData.ToList().ForEach(i => Console.Write(i.ToString()));
@@ -150,27 +168,27 @@ namespace Visual.cs
         /// <summary>
         /// Stopping and freeing the stream.
         /// </summary>
-        public static void Stop()
+        public void Stop()
         {
             Bass.BASS_ChannelStop(Stream);
             Bass.BASS_StreamFree(Stream);
-            isPlaying = false;
+            activeState = PlayerState.Stopped;
         }
 
         /// <summary>
         /// Pausing the stream (check the state first)
         /// </summary>
-        public static void Pause()
+        public void Pause()
         {
             if (Bass.BASS_ChannelIsActive(Stream) == BASSActive.BASS_ACTIVE_PLAYING)
-                Bass.BASS_ChannelPause(Stream);
+                Bass.BASS_ChannelPause(Stream); activeState = PlayerState.Paused;
         }
         /// <summary>
         /// Returning channel time
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static int GetStreamTime(int stream)
+        public int GetStreamTime(int stream)
         {
             long TimeBytes = Bass.BASS_ChannelGetLength(stream);
             double Time = Bass.BASS_ChannelBytes2Seconds(stream, TimeBytes);
@@ -182,19 +200,19 @@ namespace Visual.cs
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static int GetStreamPos(int stream)
+        public int GetStreamPos(int stream)
         {
             long pos = Bass.BASS_ChannelGetPosition(stream);
             int posSec = (int)Bass.BASS_ChannelBytes2Seconds(stream, pos);
             return posSec;
         }
 
-        public static void SetScrollPos(int stream, double pos)
+        public void SetScrollPos(int stream, double pos)
         {
             Bass.BASS_ChannelSetPosition(stream, pos);
         }
 
-        public static double StreamPos
+        public double StreamPos
         {
             get { return GetStreamPos(Stream); }
             set { SetScrollPos(Stream, value); }
@@ -204,28 +222,26 @@ namespace Visual.cs
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="volume"></param>
-        public static void SetStreamVolume(int stream, int volume)
+        public void SetStreamVolume(int stream, int volume)
         {
             Volume = volume;
             Bass.BASS_ChannelSetAttribute(stream, BASSAttribute.BASS_ATTRIB_VOL, Volume / 100F);
         }
 
-        public static bool NextTrack()
+        public bool NextTrack()
         {
-            //If stream is stopped automatically (isPlay = true)
-            if ((Bass.BASS_ChannelIsActive(Stream) == BASSActive.BASS_ACTIVE_STOPPED) && (isPlaying))
+            //If stream is stopped automatically (Playing state)
+            if ((Bass.BASS_ChannelIsActive(Stream) == BASSActive.BASS_ACTIVE_STOPPED) && (activeState == PlayerState.Playing))
             {
-                if(DataVars.FileList.Count > DataVars.CurrentTrack + 1)
+                if (DataVars.FileList.Count > DataVars.CurrentTrack + 1)
                 {
                     Play(DataVars.FileList[++DataVars.CurrentTrack], Volume);
-                    PlaylistEnd = false;
                     return true;
                 }
                 else
-                    PlaylistEnd = true;
+                    activeState = PlayerState.PlaylistEnd;
             }
             return false;
-
         }
     }
 }

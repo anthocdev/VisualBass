@@ -21,12 +21,12 @@
             </ListBox.ContextMenu>
         </ListBox>
 
-        <Slider x:Name="sldVolume" HorizontalAlignment="Left" Margin="106,364,0,0" VerticalAlignment="Top" Width="194" Maximum="100" Value="100" Thumb.DragCompleted="sldVolume_DragCompleted"/>
-        <Slider x:Name="sldStream" HorizontalAlignment="Left" Margin="43,254,0,0" VerticalAlignment="Top" Width="257" Maximum="100" Thumb.DragCompleted="sldStream_DragCompleted"  />
+        <Slider x:Name="sldVolume" HorizontalAlignment="Left" Margin="106,364,0,0" VerticalAlignment="Top" Width="194" Maximum="100" Value="100"  ValueChanged="sldVolume_ValueChanged"/>
+        <cs:CustomSlider x:Name="sldStream" HorizontalAlignment="Left" Margin="43,254,0,0" VerticalAlignment="Top" Width="257" Maximum="100" Thumb.DragCompleted="sldStream_DragCompleted"  />
 
         <Label x:Name="lblVolume" Content="Volume" HorizontalAlignment="Left" Margin="43,356,0,0" VerticalAlignment="Top"/>
         <Label x:Name="lblStream" Content="00:00:00" HorizontalAlignment="Left" Margin="43,223,0,0" VerticalAlignment="Top" Width="95"/>
-        <Label x:Name="lblVolumeVal" Content="100" HorizontalAlignment="Left" Margin="300,364,0,0" VerticalAlignment="Top" Width="32"/>
+        <Label x:Name="lblVolumeVal" Content="100%" HorizontalAlignment="Left" Margin="300,364,0,0" VerticalAlignment="Top" Width="47"/>
         <Button x:Name="btnPause" Content="Pause" HorizontalAlignment="Left" Margin="134,312,0,0" VerticalAlignment="Top" Width="75" Click="btnPause_Click"/>
         <ListBox x:Name="lstDetails" HorizontalAlignment="Left" Height="186" Margin="360,23,0,0" VerticalAlignment="Top" Width="248"/>
         <oxy:Plot x:Name="vPlot" Title="{Binding OxyTitle}" Margin="43,405,19,49">
