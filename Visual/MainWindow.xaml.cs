@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using OxyPlot;
@@ -129,6 +130,7 @@ namespace Visual
         /// <param name="e"></param>
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
+            
             if ((lstPlaylist.Items.Count != 0) && (lstPlaylist.SelectedIndex != -1))
             {
                 DataVars.CurrentTrack = lstPlaylist.SelectedIndex;
@@ -138,7 +140,9 @@ namespace Visual
                 lblStream.Content = TimeSpan.FromSeconds(BassInstance.GetStreamPos(BassInstance.Stream)).ToString();
                 sldStream.Maximum = BassInstance.GetStreamTime(BassInstance.Stream);
                 sldStream.Value = BassInstance.GetStreamPos(BassInstance.Stream);
+                UpdateEqParams(sender, null);
             }
+
         }
 
         private void btnStop_Click(object sender, RoutedEventArgs e)
@@ -176,6 +180,52 @@ namespace Visual
                 lblVolumeVal.Content = (int)e.NewValue + "%";
             }
 
+        }
+
+        private void chkEqEnabled_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            if (chkEqEnabled.IsChecked == true)
+            {
+                this.BassInstance.EqEnable(true);
+                UpdateEqParams(sender, null);
+            }
+            else { this.BassInstance.EqEnable(false); }
+            
+            Console.WriteLine("Checked?" + chkEqEnabled.IsChecked.ToString());
+        }
+
+        private void sldEq1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            this.BassInstance.SetEqParams(0, 100, sldEq1.Value);
+        }
+
+        private void sldEq2_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            this.BassInstance.SetEqParams(1, 500, sldEq2.Value);
+        }
+
+        private void sldEq3_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            this.BassInstance.SetEqParams(2, 1000, sldEq3.Value);
+        }
+
+        private void sldEq4_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            this.BassInstance.SetEqParams(3, 4000, sldEq4.Value);
+        }
+
+        private void sldEq5_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            this.BassInstance.SetEqParams(4, 8000, sldEq5.Value);
+        }
+
+        private void UpdateEqParams(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            sldEq1_ValueChanged(sender, e);
+            sldEq2_ValueChanged(sender, e);
+            sldEq3_ValueChanged(sender, e);
+            sldEq4_ValueChanged(sender, e);
+            sldEq5_ValueChanged(sender, e);
         }
     }
 

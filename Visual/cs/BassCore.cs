@@ -33,12 +33,13 @@ namespace Visual.cs
         public int HZ = 44100;
         public PlayerState activeState; // Current state of the player (stream)
         private bool InitDefaultDevice;
+        private BASS_DX8_PARAMEQ _parEq = new BASS_DX8_PARAMEQ();
+        private int[] _fx = new int[] { 0, 1, 2, 3, 4};
+        private bool _eqEnabled = false;
 
         public int Stream;
 
         public int Volume = 100;
-
-        private bool isPlaying = false;
         public bool PlaylistEnd;
 
         private float[] fftData = new float[2048];
@@ -108,11 +109,11 @@ namespace Visual.cs
         public void Play(string file, int volume)
         {
             PlayEvent?.Invoke(null, file);
+            
             if (Bass.BASS_ChannelIsActive(Stream) != BASSActive.BASS_ACTIVE_PAUSED) { 
                 Stop(); //Stopping existing stream
                 if (InitBass(HZ))
                 {
-
                     Stream = Bass.BASS_StreamCreateFile(file, 0, 0, BASSFlag.BASS_DEFAULT); //Loading in audio file into stream
                     if (Stream != 0)
                     {
@@ -127,11 +128,16 @@ namespace Visual.cs
             {
                 Bass.BASS_ChannelPlay(Stream, false);
             }
-
+            EqEnable(_eqEnabled); // Enabling EQ based on _eqEnabled state
             activeState = PlayerState.Playing;
         }
 
-        //Chandata (Fast Fourier Transform) refactored to a specific range of values for spectrum display
+        /// <summary>
+        /// Chandata (Fast Fourier Transform) refactored to a specific range of values for spectrum display
+        /// Peak value limited to 255
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
         public byte[] GetChanData(int stream)
         {
             Bass.BASS_ChannelGetData(stream, FFTData, (int)(BASSData.BASS_DATA_FFT1024 | BASSData.BASS_DATA_FFT_COMPLEX));
@@ -139,13 +145,13 @@ namespace Visual.cs
 
             //for (int a = 0; a < 1024; a++)
             //    Console.WriteLine("{0}: ({1}, {2})", a, FFTData[a * 2], FFTData[a * 2 + 1]);
-
+            int range = 200;
             int x, y;
             int b0 = 0;
-            for(x=0; x< 200; x++)
+            for(x=0; x< range; x++)
             {
                 double peak = 0;
-                int b1 = (int)Math.Pow(2, x * 10.0 / (200 - 1));
+                int b1 = (int)Math.Pow(2, x * 10.0 / (range - 1));
 
                 if (b1 > 1023) b1 = 1023;
                 if (b1 <= b0) b1 = b0 + 1;
@@ -206,12 +212,18 @@ namespace Visual.cs
             int posSec = (int)Bass.BASS_ChannelBytes2Seconds(stream, pos);
             return posSec;
         }
-
+        /// <summary>
+        /// Specifying position of a stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="pos"></param>
         public void SetScrollPos(int stream, double pos)
         {
             Bass.BASS_ChannelSetPosition(stream, pos);
         }
-
+        /// <summary>
+        /// Streamposition variable
+        /// </summary>
         public double StreamPos
         {
             get { return GetStreamPos(Stream); }
@@ -228,6 +240,11 @@ namespace Visual.cs
             Bass.BASS_ChannelSetAttribute(stream, BASSAttribute.BASS_ATTRIB_VOL, Volume / 100F);
         }
 
+        /// <summary>
+        /// Switching track automatically after end, using BASS_ACTIVE_STOPPED state against activeState enum to 
+        /// confirm the change is not manual
+        /// </summary>
+        /// <returns></returns>
         public bool NextTrack()
         {
             //If stream is stopped automatically (Playing state)
@@ -243,5 +260,47 @@ namespace Visual.cs
             }
             return false;
         }
+
+        /// <summary>
+        /// Enables EQ based on data in _fx array
+        /// </summary>
+        /// <param name="enabled"></param>
+        /// <returns></returns>
+        public bool EqEnable(bool enabled)
+        {
+            _eqEnabled = enabled;
+            if (_eqEnabled)
+            {
+                for (int i = 0; i < _fx.Length; i++)
+                {
+                    _fx[i] = Bass.BASS_ChannelSetFX(this.Stream, BASSFXType.BASS_FX_DX8_PARAMEQ, 0);
+                }
+                return true;
+            }
+            else
+            {
+                for(int i = 0; i < _fx.Length; i++)
+                {
+                    Bass.BASS_ChannelRemoveFX(this.Stream, _fx[i]);
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Equalizer parameter
+        /// </summary>
+        /// <param name="fxchan">_fx Array channel</param>
+        /// <param name="center"> Center band</param>
+        /// <param name="gain"> Gain for the band</param>
+        /// <returns></returns>
+        public bool SetEqParams(int fxchan, double center, double gain)
+        {
+            _parEq.fBandwidth = 18.0f;
+            _parEq.fCenter = (float)center;
+            _parEq.fGain = (float)gain;
+            return Bass.BASS_FXSetParameters(_fx[fxchan], _parEq);
+        }
+
     }
 }
