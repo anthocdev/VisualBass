@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>nightico.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Bass.Net">
       <HintPath>..\..\..\..\Downloads\Bass24.Net\v4.5\Bass.Net.dll</HintPath>
@@ -82,6 +85,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="cs\BassCore.cs" />
+    <Compile Include="cs\Components\AboutDialog.cs" />
     <Compile Include="cs\CustomSlider.cs" />
     <Compile Include="cs\DataVars.cs" />
     <Compile Include="cs\Models\MetaModel.cs" />
@@ -125,9 +129,8 @@
     <Content Include="extensions\basswv.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="nightico.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="cs\Components\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

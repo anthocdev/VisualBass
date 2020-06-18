@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using OxyPlot;
 using Visual.cs;
+using Visual.cs.Components;
 using Visual.cs.Models;
 
 namespace Visual
@@ -226,6 +228,24 @@ namespace Visual
             sldEq3_ValueChanged(sender, e);
             sldEq4_ValueChanged(sender, e);
             sldEq5_ValueChanged(sender, e);
+        }
+
+        /// <summary>
+        /// Application exit
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void miExit_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private void miAbout_Click(object sender, RoutedEventArgs e)
+        {
+            AboutDialog aboutDialog = new AboutDialog();
+            aboutDialog.Owner = this;
+            aboutDialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            aboutDialog.ShowDialog();
         }
     }
 
